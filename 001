@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感熱紙紙捲成本計算機</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --success: #10b981;
+            --success-light: #d1fae5;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        /* Header Layout */
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 設計者標籤樣式 */
+        .designer-tag {
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* 列印按鈕樣式 */
+        .btn-print {
+            background-color: #334155;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-print:hover {
+            background-color: #1e293b;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width: 900px) {
+            .grid {
+                grid-template-columns: 1.4fr 1fr; /* 左寬右窄 */
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #334155;
+        }
+        .section-title svg { color: var(--primary); }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .two-cols { grid-template-columns: 1fr; }
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-sub);
+        }
+
+        .btn-xs {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-xs:hover {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            padding-right: 45px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .highlight-input {
+            animation: highlight 1.5s ease-out;
+        }
+
+        @keyframes highlight {
+            0% { background-color: #fff; }
+            20% { background-color: #fef08a; } /* Yellow flash */
+            100% { background-color: #fff; }
+        }
+
+        .unit {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        /* 結果區樣式 */
+        .sticky-card {
+            position: sticky;
+            top: 20px;
+        }
+
+        .diameter-box {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .diameter-val {
+            font-size: 36px;
+            font-family: monospace;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .result-label {
+            font-size: 15px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .result-sub {
+            font-size: 12px;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .result-val {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .result-total {
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            padding: 16px;
+            border: none;
+            margin-top: 10px;
+        }
+
+        .result-total .result-label { color: #1e40af; font-size: 16px; font-weight: 700; }
+        .result-total .result-val { color: #1d4ed8; font-size: 24px; }
+
+        /* Profit Section in Results */
+        .profit-section {
+            margin-top: 20px;
+            border-top: 2px solid var(--border);
+            padding-top: 20px;
+        }
+        .profit-card {
+            background-color: var(--success-light);
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .profit-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .profit-row:last-child { margin-bottom: 0; }
+        .profit-label { color: #065f46; font-weight: 600; font-size: 14px; }
+        .profit-val { color: #047857; font-weight: 700; font-family: monospace; font-size: 16px; }
+        
+        .big-profit {
+            font-size: 24px;
+            color: #059669;
+            border-top: 1px dashed #6ee7b7;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        /* 簡易圖表 */
+        .chart-container {
+            margin-top: 25px;
+        }
+        .bar-wrapper {
+            height: 24px;
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .bar-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .bg-paper { background-color: #3b82f6; }
+        .bg-print { background-color: #6366f1; }
+        .bg-proc { background-color: #f97316; }
+        .bg-ship { background-color: #22c55e; }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* 列印專用樣式 */
+        @media print {
+            .no-print, .btn-print, .btn-xs, .modal-overlay {
+                display: none !important;
+            }
+            body {
+                background-color: white;
+                padding: 0;
+                font-size: 12px; /* 列印時字體稍小以容納更多內容 */
+            }
+            .container {
+                max-width: 100%;
+                width: 100%;
+                margin: 0;
+            }
+            header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #000;
+            }
+            /* 列印時強制展開 Grid */
+            .grid {
+                display: block; 
+            }
+            .left-col, .right-col {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            /* 卡片去陰影改邊框 */
+            .card {
+                box-shadow: none;
+                border: 1px solid #000;
+                break-inside: avoid; /* 避免卡片被分頁切斷 */
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            .diameter-box {
+                background: white;
+                color: black;
+                border: 1px solid #000;
+                box-shadow: none;
+            }
+            .diameter-val {
+                color: black;
+            }
+            .result-total {
+                background-color: #eee !important;
+                -webkit-print-color-adjust: exact; /* 強制列印背景色 */
+                color: black !important;
+            }
+            .profit-card {
+                background-color: white;
+                border: 1px solid #000;
+            }
+            /* 讓圖表在列印時可見 */
+            .bar-wrapper {
+                border: 1px solid #ccc;
+                -webkit-print-color-adjust: exact;
+            }
+            .bg-paper { background-color: #3b82f6 !important; }
+            .bg-print { background-color: #6366f1 !important; }
+            .bg-proc { background-color: #f97316 !important; }
+            .bg-ship { background-color: #22c55e !important; }
+        }
+
+        /* 隱藏箭頭 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-content">
+            <!-- 左側標題 -->
+            <div>
+                <h1>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/>
+                    </svg>
+                    感熱紙紙捲成本計算系統
+                </h1>
+                <p style="color: var(--text-sub); margin-top: 5px;">純 HTML/JS 版本 - 含利潤與總量試算</p>
+            </div>
+            
+            <!-- 右上角設計者與按鈕區 -->
+            <div style="text-align: right;">
+                <div class="designer-tag">設計者：APO</div>
+                <button class="btn-print no-print" onclick="window.print()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    列印 / 輸出 PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- 左側輸入區 -->
+        <div class="left-col">
+            
+            <!-- Group 1 -->
+            <div class="card">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/></svg>
+                    1. 紙張規格與直徑參數
+                </div>
+                <div class="two-cols">
+                    <div class="input-group">
+                        <label>A. 紙捲寬度</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="width" value="8.0" step="0.1">
+                            <span class="unit">cm</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>A. 紙捲長度</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="length" value="80" step="1">
+                            <span class="unit">m</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bae6fd;">
+                    <label style="color: #0369a1; margin-bottom: 10px; font-weight: bold;">直徑計算參數</label>
+                    <div class="two-cols">
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>紙管芯內徑</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="coreInner" value="12">
+                                <span class="unit">mm</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>紙張厚度</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="thickness" value="65">
+                                <span class="unit">um</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="two-cols">
+                    <div class="input-group">
+                        <div class="label-row">
+                            <label>B. 紙價 (原料單價)</label>
+                            <button type="button" class="btn-xs no-print" id="btnReverse" title="知道單捲賣價，想反推紙價成本?">
+                                ⟲ 從總價反推
+                            </button>
+                        </div>
+                        <div class="input-wrapper">
+                            <input type="number" id="paperPrice" value="25">
+                            <span class="unit">元/m²</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>C. 生產損耗率</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="lossRate" value="5">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 13px; color: #64748b; background: #f1f5f9; padding: 8px; border-radius: 4px;">
+                    單捲面積：<span id="areaDisplay" style="font-family: monospace; font-weight: bold;">0.000</span> m²
+                </div>
+            </div>
+
+            <!-- Group 2 -->
+            <div class="card">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    2. 生產與加工費用
+                </div>
+                <div style="background: #fff7ed; border:1px solid #ffedd5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="two-cols">
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>D. 印刷工資 (大捲)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="printJumbo" value="500">
+                                <span class="unit">元</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>E. 生產捲數 (小捲)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="yield" value="100">
+                                <span class="unit">捲</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="two-cols">
+                    <div class="input-group">
+                        <label>加工工資 (分條/捲)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="processing" value="3">
+                            <span class="unit">元/捲</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>F. 其他費用 (紙管等)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="other" value="2">
+                            <span class="unit">元/捲</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 3 -->
+            <div class="card">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    3. 包裝與運送
+                </div>
+                <div class="two-cols">
+                    <div class="input-group">
+                        <label>G. 運費 (整箱)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="shipCarton" value="100">
+                            <span class="unit">元/箱</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>每箱裝箱數</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="rollsCarton" value="50">
+                            <span class="unit">捲</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 4: NEW 訂單總量與利潤 -->
+            <div class="card" style="border-color: #10b981;">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    4. 訂單總量與利潤估算
+                </div>
+                <div class="two-cols">
+                    <div class="input-group">
+                        <label>訂單總捲數</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="orderQuantity" value="1000">
+                            <span class="unit">捲</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>預期利潤率 (加成)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="profitRate" value="20">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右側結果區 -->
+        <div class="right-col">
+            <div class="card sticky-card">
+                <div class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+                    計算結果
+                </div>
+
+                <div class="diameter-box">
+                    <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase;">成品預估直徑</div>
+                    <div class="diameter-val"><span id="resDiameter">0.0</span> <span style="font-size:16px;">mm</span></div>
+                    <div style="font-size: 11px; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 8px; padding-top: 8px;">
+                        公式：√(紙管外徑² + 4×長×厚/π)
+                    </div>
+                </div>
+
+                <div class="result-row">
+                    <div>
+                        <div class="result-label">C. 每捲紙價 (含損耗)</div>
+                        <span class="result-sub">原料 <span id="subRaw">0</span> + 損耗 <span id="subLoss">0</span></span>
+                    </div>
+                    <div class="result-val"><span id="resPaper">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row">
+                    <div>
+                        <div class="result-label">印刷成本分攤</div>
+                        <span class="result-sub">大捲 <span id="subPrint">0</span> / <span id="subYield">0</span> 捲</span>
+                    </div>
+                    <div class="result-val"><span id="resPrint">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row">
+                    <div class="result-label">加工工資</div>
+                    <div class="result-val"><span id="resProcess">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row">
+                    <div class="result-label">其他費用</div>
+                    <div class="result-val"><span id="resOther">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row">
+                    <div>
+                        <div class="result-label">運費分攤</div>
+                        <span class="result-sub">整箱 <span id="subShip">0</span> / <span id="subRolls">0</span> 捲</span>
+                    </div>
+                    <div class="result-val"><span id="resShip">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row result-total">
+                    <div class="result-label">A. 每捲總成本 (單價)</div>
+                    <div class="result-val"><span id="resTotalRoll">0.00</span> 元</div>
+                </div>
+
+                <div class="result-row result-total" style="margin-top: 15px; background-color: #fff;">
+                    <div class="result-label" style="color: #334155">B. 每箱總成本</div>
+                    <div class="result-val" style="color: #334155"><span id="resTotalCarton">0.00</span> 元</div>
+                </div>
+
+                <!-- NEW: 訂單試算區塊 -->
+                <div class="profit-section">
+                    <h4 style="color: #059669; font-weight: 700; margin-bottom: 10px; display:flex; align-items:center; gap:5px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                        訂單利潤試算
+                    </h4>
+                    <div class="profit-card">
+                        <div class="profit-row">
+                            <span class="profit-label">總成本金額</span>
+                            <span class="profit-val" id="resBatchCost">0</span>
+                        </div>
+                        <div class="profit-row">
+                            <span class="profit-label">建議售價/捲</span>
+                            <span class="profit-val" id="resSellPrice">0.00</span>
+                        </div>
+                        <div class="profit-row">
+                            <span class="profit-label">總銷售額</span>
+                            <span class="profit-val" id="resRevenue">0</span>
+                        </div>
+                        <div class="profit-row big-profit">
+                            <span class="profit-label">預估總利潤</span>
+                            <span class="profit-val" id="resTotalProfit">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <div style="font-size:12px; font-weight:bold; margin-bottom:5px;">單捲成本結構佔比</div>
+                    <div class="bar-wrapper" id="chartBar">
+                        <!-- JS will inject divs here -->
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="dot bg-paper"></div>紙價 <span id="pctPaper">0%</span></div>
+                        <div class="legend-item"><div class="dot bg-print"></div>印刷 <span id="pctPrint">0%</span></div>
+                        <div class="legend-item"><div class="dot bg-proc"></div>加工 <span id="pctProc">0%</span></div>
+                        <div class="legend-item"><div class="dot bg-ship"></div>運費 <span id="pctShip">0%</span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 反推工具 Modal -->
+<div class="modal-overlay" id="reverseModal">
+    <div class="modal-content">
+        <div class="modal-header">反推紙價工具</div>
+        <p style="margin-bottom: 15px; color: #64748b; font-size: 14px;">
+            請輸入您期望的<b>每捲總成本 (Target Price)</b>，系統將自動扣除目前的固定成本與損耗，反算出您應該設定的紙價。
+        </p>
+        <div class="input-group">
+            <label style="margin-bottom: 5px;">目標每捲單價</label>
+            <div class="input-wrapper">
+                <input type="number" id="targetPriceInput" placeholder="例如: 15" style="border-color: #2563eb;">
+                <span class="unit">元</span>
+            </div>
+        </div>
+        <div id="reverseError" style="color: #ef4444; font-size: 13px; display: none; margin-top: 5px;">
+            目標價格過低，不足以支付固定成本。
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="btnCloseReverse">取消</button>
+            <button class="btn-primary" id="btnApplyReverse">計算並套用</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 取得所有輸入元素
+    const inputs = {
+        width: document.getElementById('width'),
+        length: document.getElementById('length'),
+        coreInner: document.getElementById('coreInner'),
+        thickness: document.getElementById('thickness'),
+        paperPrice: document.getElementById('paperPrice'),
+        lossRate: document.getElementById('lossRate'),
+        printJumbo: document.getElementById('printJumbo'),
+        yield: document.getElementById('yield'),
+        processing: document.getElementById('processing'),
+        other: document.getElementById('other'),
+        shipCarton: document.getElementById('shipCarton'),
+        rollsCarton: document.getElementById('rollsCarton'),
+        // New inputs
+        orderQuantity: document.getElementById('orderQuantity'),
+        profitRate: document.getElementById('profitRate')
+    };
+
+    // 取得所有顯示元素
+    const displays = {
+        area: document.getElementById('areaDisplay'),
+        diameter: document.getElementById('resDiameter'),
+        rawPaper: document.getElementById('subRaw'),
+        lossPaper: document.getElementById('subLoss'),
+        paperCost: document.getElementById('resPaper'),
+        printSubVal: document.getElementById('subPrint'),
+        printSubYield: document.getElementById('subYield'),
+        printCost: document.getElementById('resPrint'),
+        processCost: document.getElementById('resProcess'),
+        otherCost: document.getElementById('resOther'),
+        shipSubVal: document.getElementById('subShip'),
+        shipSubRolls: document.getElementById('subRolls'),
+        shipCost: document.getElementById('resShip'),
+        totalRoll: document.getElementById('resTotalRoll'),
+        totalCarton: document.getElementById('resTotalCarton'),
+        // Profit Displays
+        batchCost: document.getElementById('resBatchCost'),
+        sellPrice: document.getElementById('resSellPrice'),
+        revenue: document.getElementById('resRevenue'),
+        totalProfit: document.getElementById('resTotalProfit'),
+        // Percentages
+        pctPaper: document.getElementById('pctPaper'),
+        pctPrint: document.getElementById('pctPrint'),
+        pctProc: document.getElementById('pctProc'),
+        pctShip: document.getElementById('pctShip'),
+        // Bar Chart
+        chartBar: document.getElementById('chartBar')
+    };
+
+    function getValues() {
+        const v = {};
+        for (let key in inputs) {
+            v[key] = parseFloat(inputs[key].value) || 0;
+        }
+        return v;
+    }
+
+    function formatMoney(amount) {
+        return amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function calculate() {
+        const v = getValues();
+
+        // 2. 計算邏輯
+        // 面積
+        const area = (v.width / 100) * v.length;
+        displays.area.innerText = area.toFixed(4);
+
+        // 直徑
+        // 外徑 = 內徑 + 2mm (假設壁厚1mm)
+        const coreOuterMm = v.coreInner + 2;
+        const term1 = Math.pow(coreOuterMm, 2);
+        const term2 = (4 * (v.length * 1000) * (v.thickness / 1000)) / Math.PI;
+        const diameter = Math.sqrt(term1 + term2);
+        displays.diameter.innerText = diameter.toFixed(1);
+
+        // 成本
+        const rawCost = area * v.paperPrice;
+        const costWithLoss = rawCost * (1 + v.lossRate / 100);
+        
+        const printPerRoll = v.yield > 0 ? v.printJumbo / v.yield : 0;
+        const shipPerRoll = v.rollsCarton > 0 ? v.shipCarton / v.rollsCarton : 0;
+        
+        const totalRoll = costWithLoss + printPerRoll + v.processing + v.other + shipPerRoll;
+        const totalCarton = totalRoll * v.rollsCarton;
+
+        // 3. 訂單與利潤計算 (NEW)
+        // 總成本 = 單捲成本 * 總捲數
+        const batchCost = totalRoll * v.orderQuantity;
+        // 建議售價 = 單捲成本 * (1 + 利潤率)
+        const sellPrice = totalRoll * (1 + v.profitRate / 100);
+        // 總營收 = 建議售價 * 總捲數
+        const revenue = sellPrice * v.orderQuantity;
+        // 總利潤 = 總營收 - 總成本
+        const totalProfit = revenue - batchCost;
+
+        // 4. 更新顯示
+        displays.rawPaper.innerText = rawCost.toFixed(2);
+        displays.lossPaper.innerText = (costWithLoss - rawCost).toFixed(2);
+        displays.paperCost.innerText = costWithLoss.toFixed(2);
+
+        displays.printSubVal.innerText = v.printJumbo;
+        displays.printSubYield.innerText = v.yield;
+        displays.printCost.innerText = printPerRoll.toFixed(2);
+
+        displays.processCost.innerText = v.processing.toFixed(2);
+        displays.otherCost.innerText = v.other.toFixed(2);
+
+        displays.shipSubVal.innerText = v.shipCarton;
+        displays.shipSubRolls.innerText = v.rollsCarton;
+        displays.shipCost.innerText = shipPerRoll.toFixed(2);
+
+        displays.totalRoll.innerText = totalRoll.toFixed(2);
+        displays.totalCarton.innerText = totalCarton.toFixed(2);
+
+        // New Profit Display Updates
+        displays.batchCost.innerText = "$ " + formatMoney(batchCost);
+        displays.sellPrice.innerText = sellPrice.toFixed(2) + " 元";
+        displays.revenue.innerText = "$ " + formatMoney(revenue);
+        displays.totalProfit.innerText = "$ " + formatMoney(totalProfit);
+
+        // 5. 更新圖表
+        const pPaper = totalRoll > 0 ? (costWithLoss / totalRoll) * 100 : 0;
+        const pPrint = totalRoll > 0 ? (printPerRoll / totalRoll) * 100 : 0;
+        const pProc = totalRoll > 0 ? ((v.processing + v.other) / totalRoll) * 100 : 0;
+        const pShip = totalRoll > 0 ? (shipPerRoll / totalRoll) * 100 : 0;
+
+        displays.pctPaper.innerText = pPaper.toFixed(1) + '%';
+        displays.pctPrint.innerText = pPrint.toFixed(1) + '%';
+        displays.pctProc.innerText = pProc.toFixed(1) + '%';
+        displays.pctShip.innerText = pShip.toFixed(1) + '%';
+
+        displays.chartBar.innerHTML = `
+            <div class="bar-segment bg-paper" style="width: ${pPaper}%">紙</div>
+            <div class="bar-segment bg-print" style="width: ${pPrint}%">印</div>
+            <div class="bar-segment bg-proc" style="width: ${pProc}%">加</div>
+            <div class="bar-segment bg-ship" style="width: ${pShip}%">運</div>
+        `;
+    }
+
+    // --- 反推功能邏輯 ---
+    const modal = document.getElementById('reverseModal');
+    const btnReverse = document.getElementById('btnReverse');
+    const btnCloseReverse = document.getElementById('btnCloseReverse');
+    const btnApplyReverse = document.getElementById('btnApplyReverse');
+    const targetPriceInput = document.getElementById('targetPriceInput');
+    const reverseError = document.getElementById('reverseError');
+
+    btnReverse.addEventListener('click', () => {
+        modal.classList.add('active');
+        targetPriceInput.value = '';
+        targetPriceInput.focus();
+        reverseError.style.display = 'none';
+    });
+
+    btnCloseReverse.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    btnApplyReverse.addEventListener('click', () => {
+        const targetPrice = parseFloat(targetPriceInput.value);
+        if (isNaN(targetPrice) || targetPrice <= 0) {
+            alert("請輸入有效的目標價格");
+            return;
+        }
+
+        const v = getValues();
+        const area = (v.width / 100) * v.length;
+
+        const printPerRoll = v.yield > 0 ? v.printJumbo / v.yield : 0;
+        const shipPerRoll = v.rollsCarton > 0 ? v.shipCarton / v.rollsCarton : 0;
+        const fixedCost = printPerRoll + v.processing + v.other + shipPerRoll;
+
+        if (targetPrice <= fixedCost) {
+            reverseError.style.display = 'block';
+            reverseError.innerText = `目標價格過低！固定成本已達 ${fixedCost.toFixed(2)} 元，無法倒推。`;
+            return;
+        }
+
+        const availableForPaper = targetPrice - fixedCost;
+        const lossMultiplier = 1 + (v.lossRate / 100);
+        const calculatedPaperPrice = availableForPaper / (area * lossMultiplier);
+
+        inputs.paperPrice.value = calculatedPaperPrice.toFixed(2);
+        inputs.paperPrice.classList.add('highlight-input');
+        setTimeout(() => inputs.paperPrice.classList.remove('highlight-input'), 1500);
+
+        modal.classList.remove('active');
+        calculate();
+    });
+
+    // 綁定輸入事件
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', calculate);
+        input.addEventListener('focus', function() { this.select(); });
+    });
+
+    // 初始化
+    calculate();
+
+</script>
+
+</body>
+</html>
